@@ -593,7 +593,6 @@ export function RankingApp() {
             })}
           </ol>
         )}
-        {leaderboard?.mode === "live" && <p className="campus-footnote">Your ranking is counted automatically. Rank again anytime to update it.</p>}
       </section>
       <button className="button button--ghost" onClick={reset}>Rank again</button>
     </main>

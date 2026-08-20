@@ -228,7 +228,6 @@ h1 em, h2 em { color: var(--purple); font-weight: 650; }
 .leaderboard-list small { display: block; overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .leaderboard-list strong { padding: 7px 10px; color: var(--purple); border: 1px solid var(--purple); border-radius: 999px; font-size: 13px; }
 .leaderboard-loading { margin-top: 28px; padding: 35px; color: var(--muted); background: rgba(255,255,255,.5); border-radius: 20px; text-align: center; }
-.campus-footnote { color: var(--muted); font-size: 11px; }
 .results-shell > .button--ghost { display: flex; }
 
 @media (max-width: 760px) {

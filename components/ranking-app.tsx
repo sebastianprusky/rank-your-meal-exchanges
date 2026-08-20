@@ -102,14 +102,37 @@ function VendorArt({ vendor, compact = false }: { vendor: Vendor; compact?: bool
   );
 }
 
-function AppHeader({ step, onRestart }: { step?: string; onRestart?: () => void }) {
+function drawWrappedCanvasText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+) {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let line = "";
+
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && context.measureText(candidate).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+
+  lines.slice(0, 2).forEach((value, index) => context.fillText(value, x, y + index * lineHeight, maxWidth));
+  return Math.min(lines.length, 2);
+}
+
+function AppHeader({ step }: { step: string }) {
   return (
     <header className="app-header">
-      <button className="wordmark" onClick={onRestart} disabled={!onRestart} aria-label="Go to start">
-        <span className="wordmark__n">N</span>
-        <span>meal exchanges</span>
-      </button>
-      {step && <span className="step-label">{step}</span>}
+      <span className="step-label">{step}</span>
     </header>
   );
 }
@@ -132,6 +155,7 @@ export function RankingApp() {
   const [machine, setMachine] = useState<SortMachine | null>(null);
   const [comparisons, setComparisons] = useState(0);
   const [favoriteDish, setFavoriteDish] = useState<string | null>(null);
+  const [favoriteDraft, setFavoriteDraft] = useState("");
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const savedSignature = useRef<string | null>(null);
@@ -157,6 +181,7 @@ export function RankingApp() {
     setMachine(null);
     setComparisons(0);
     setFavoriteDish(null);
+    setFavoriteDraft("");
     setShareStatus(null);
   }, []);
 
@@ -313,7 +338,10 @@ export function RankingApp() {
       body: JSON.stringify({
         deviceToken: getDeviceToken(),
         rankings,
-        favoriteDish: topVendor && favoriteDish ? { vendorId: topVendor.id, dishName: favoriteDish } : null,
+        favoriteDish: topVendor && favoriteDish ? {
+          vendorId: topVendor.id,
+          dishName: favoriteDish,
+        } : null,
       }),
     }).then(() => void loadLeaderboard()).catch(() => void loadLeaderboard());
   }, [favoriteDish, loadLeaderboard, phase, scoredRanking, topVendor]);
@@ -336,40 +364,47 @@ export function RankingApp() {
     context.fillText("NORTHWESTERN", 82, 95);
     context.fillStyle = "#4E2A84";
     context.font = "800 76px 'Fraunces', Georgia, serif";
-    context.fillText("My meal exchanges", 82, 184);
-    context.fillText("ranked.", 82, 266);
+    context.fillText("My campus dining", 82, 184);
+    context.fillText("ranked", 82, 266);
 
+    const compactRanking = scoredRanking.length > 9;
+    const rankingStart = compactRanking ? 315 : 335;
+    const rankingStep = compactRanking ? 70 : 86;
+    const rankingHeight = compactRanking ? 54 : 66;
     scoredRanking.forEach(({ vendor, score }, index) => {
-      const y = 335 + index * 86;
+      const y = rankingStart + index * rankingStep;
       context.fillStyle = index === 0 ? "#4E2A84" : "#FFFFFF";
       context.beginPath();
-      context.roundRect(72, y, 936, 66, 18);
+      context.roundRect(72, y, 936, rankingHeight, 18);
       context.fill();
 
       context.fillStyle = index === 0 ? "#FFFFFF" : "#4E2A84";
-      context.font = "700 27px 'DM Sans', sans-serif";
-      context.fillText(String(index + 1).padStart(2, "0"), 98, y + 43);
+      context.font = `700 ${compactRanking ? 23 : 27}px 'DM Sans', sans-serif`;
+      context.fillText(String(index + 1).padStart(2, "0"), 98, y + (compactRanking ? 36 : 43));
       context.fillStyle = index === 0 ? "#FFFFFF" : "#211B24";
-      context.font = "650 30px 'DM Sans', sans-serif";
-      context.fillText(vendor.name, 178, y + 43);
+      context.font = `650 ${compactRanking ? 26 : 30}px 'DM Sans', sans-serif`;
+      context.fillText(vendor.name, 178, y + (compactRanking ? 36 : 43), 650);
       context.textAlign = "right";
-      context.font = "700 27px 'DM Sans', sans-serif";
-      context.fillText(score.toFixed(1), 974, y + 43);
+      context.font = `700 ${compactRanking ? 23 : 27}px 'DM Sans', sans-serif`;
+      context.fillText(score.toFixed(1), 974, y + (compactRanking ? 36 : 43));
       context.textAlign = "left";
     });
 
     if (favoriteDish && topVendor) {
       context.fillStyle = "#4E2A84";
       context.font = "700 22px 'DM Sans', sans-serif";
-      context.fillText("MY GO-TO", 82, 1165);
+      context.fillText("MY FAVORITE", 82, 1148);
       context.fillStyle = "#211B24";
       context.font = "650 30px 'DM Sans', sans-serif";
-      context.fillText(`${favoriteDish} at ${topVendor.name}`, 82, 1206);
+      const favoriteLines = drawWrappedCanvasText(context, favoriteDish, 82, 1187, 916, 34);
+      context.fillStyle = "#6D6571";
+      context.font = "500 21px 'DM Sans', sans-serif";
+      context.fillText(`at ${topVendor.name}`, 82, 1193 + favoriteLines * 34, 916);
     }
 
     context.fillStyle = "#6D6571";
     context.font = "500 24px 'DM Sans', sans-serif";
-    context.fillText(SITE_HOSTNAME, 82, 1285);
+    context.fillText(SITE_HOSTNAME, 82, 1315);
 
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Could not create image")), "image/png"),
@@ -381,8 +416,8 @@ export function RankingApp() {
     try {
       const file = await createShareFile();
       const data = {
-        title: "My Northwestern meal exchange ranking",
-        text: `I ranked Northwestern's meal exchanges — make yours at ${SITE_URL}`,
+        title: "My Northwestern campus dining ranking",
+        text: `I ranked Northwestern's campus dining spots — make yours at ${SITE_URL}`,
         files: [file],
       };
 
@@ -419,14 +454,10 @@ export function RankingApp() {
   if (phase === "landing") {
     return (
       <main className="site-shell landing">
-        <AppHeader />
         <section className="landing__hero">
           <div className="landing__copy">
-            <p className="eyebrow">A two-minute taste test</p>
-            <h1>Rank your<br /><em>meal exchanges.</em></h1>
-            <p className="landing__subhead">Nine spots. A few quick choices. Your definitive Northwestern ranking.</p>
+            <h1>Rank your<br /><em>campus dining spots.</em></h1>
             <button className="button button--primary button--large" onClick={() => setPhase("bucket")}>Start ranking <span>→</span></button>
-            <p className="privacy-note">No account. No signup. Just your picks.</p>
           </div>
           <div className="card-stack" aria-hidden="true">
             {[vendors[0], vendors[4], vendors[1]].map((vendor, index) => (
@@ -437,7 +468,6 @@ export function RankingApp() {
             ))}
           </div>
         </section>
-        <div className="landing__ticker"><span>MOD PIZZA</span><i>✦</i><span>SHAKE SMART</span><i>✦</i><span>FRAN&apos;S</span><i>✦</i><span>BUEN DIA</span></div>
       </main>
     );
   }
@@ -446,13 +476,13 @@ export function RankingApp() {
     const vendor = vendors[bucketIndex];
     return (
       <main className="site-shell flow-shell">
-        <AppHeader step="First pass" onRestart={reset} />
+        <AppHeader step="Phase One: Your Preferences" />
         <div className="progress-row"><span>{bucketIndex + 1} of {vendors.length}</span><div className="progress-track"><i style={{ width: `${((bucketIndex + 1) / vendors.length) * 100}%` }} /></div></div>
         <section className="flow-content bucket-screen">
-          <div className="prompt-block"><p className="eyebrow">Go with your gut</p><h2>How do you feel about<br /><em>{vendor.name}?</em></h2></div>
+          <div className="prompt-block"><h2>How do you feel about<br /><em>{vendor.name}?</em></h2></div>
           <article className="focus-card">
             <VendorArt vendor={vendor} />
-            <div className="focus-card__copy"><div><h3>{vendor.name}</h3><p>{vendor.eyebrow}</p></div><span className="mini-tag">Meal exchange</span></div>
+            <div className="focus-card__copy"><h3>{vendor.name}</h3></div>
           </article>
           <div className="bucket-buttons">
             {bucketOrder.map((bucket) => <button key={bucket} onClick={() => chooseBucket(bucket)}><span>{bucketMeta[bucket].mark}</span>{bucketMeta[bucket].label}</button>)}
@@ -469,22 +499,19 @@ export function RankingApp() {
     const right = vendorById[machine.right[machine.rightIndex]];
     return (
       <main className="site-shell flow-shell">
-        <AppHeader step="Head-to-head" onRestart={reset} />
+        <AppHeader step="Phase 2: Head-to-head" />
         <div className="progress-row"><span>Choice {comparisons + 1}</span><div className="progress-track progress-track--open"><i /></div></div>
         <section className="flow-content compare-screen">
-          <div className="prompt-block"><p className="eyebrow">Ordering your {bucketMeta[machine.bucket].label.toLowerCase()} picks</p><h2>Which would you<br /><em>rather have?</em></h2></div>
+          <div className="prompt-block"><h2>Which would you<br /><em>rather have?</em></h2></div>
           <div className="versus-grid">
             {[left, right].map((vendor, index) => (
               <button className="versus-card" key={vendor.id} onClick={() => chooseComparison(vendor.id)}>
                 <VendorArt vendor={vendor} />
                 <span className="versus-card__name">{vendor.name}</span>
-                <small>{vendor.eyebrow}</small>
-                <b>Pick this <span>→</span></b>
                 {index === 0 && <i className="or-badge">or</i>}
               </button>
             ))}
           </div>
-          <p className="helper-copy">Tap the one you&apos;d choose today.</p>
         </section>
       </main>
     );
@@ -492,16 +519,35 @@ export function RankingApp() {
 
   if (phase === "dish") {
     if (!topVendor) return null;
+    const cleanedFavorite = favoriteDraft.replace(/\s+/g, " ").trim();
     return (
       <main className="site-shell flow-shell">
-        <AppHeader step="One last thing" onRestart={reset} />
+        <AppHeader step="Phase 3: Your Favorite Item" />
         <section className="flow-content dish-screen">
           <div className="dish-winner"><span>Your #1</span><VendorArt vendor={topVendor} compact /><h3>{topVendor.name}</h3></div>
-          <div className="prompt-block"><p className="eyebrow">Optional</p><h2>What&apos;s your go-to<br />at <em>{topVendor.name}?</em></h2><p>We&apos;ll add it to your result card.</p></div>
-          <div className="dish-list">
-            {topVendor.menuItems.map((item) => <button key={item} onClick={() => { setFavoriteDish(item); setPhase("results"); }}><span>{item}</span><i>→</i></button>)}
-          </div>
-          <button className="text-button" onClick={() => setPhase("results")}>Skip this</button>
+          <div className="prompt-block"><p className="eyebrow">Optional</p><h2>What&apos;s your go-to<br />at <em>{topVendor.name}?</em></h2></div>
+          <form
+            className="favorite-entry"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!cleanedFavorite) return;
+              setFavoriteDish(cleanedFavorite);
+              setPhase("results");
+            }}
+          >
+            <label className="sr-only" htmlFor="favorite-dish">Favorite item or order</label>
+            <input
+              id="favorite-dish"
+              value={favoriteDraft}
+              onChange={(event) => setFavoriteDraft(event.target.value)}
+              placeholder="e.g. Chicken quesadilla, Rawcai Bowl"
+              maxLength={80}
+              autoComplete="off"
+              autoFocus
+            />
+            <button className="button button--primary" type="submit" disabled={!cleanedFavorite}>View my results <span>→</span></button>
+          </form>
+          <button className="text-button" onClick={() => setPhase("results")}>Skip</button>
         </section>
       </main>
     );
@@ -509,22 +555,22 @@ export function RankingApp() {
 
   return (
     <main className="site-shell results-shell">
-      <AppHeader step="Your results" onRestart={reset} />
-      <section className="results-intro"><p className="eyebrow">The verdict is in</p><h2>Your meal exchanges,<br /><em>ranked.</em></h2><p>Screenshot it. Share it. Defend it.</p></section>
-      <section className="result-card" aria-label="Your ranked meal exchanges">
-        <div className="result-card__head"><span>MY NORTHWESTERN</span><b>{scoredRanking.length}<small>/9 tried</small></b></div>
+      <AppHeader step="Phase 4: Your results" />
+      <section className="results-intro"><h2>Your dining spots,<br /><em>ranked.</em></h2></section>
+      <section className="result-card" aria-label="Your ranked campus dining spots">
+        <div className="result-card__head"><span>My dining ranking</span><b>{scoredRanking.length}<small>/{vendors.length} tried</small></b></div>
         {scoredRanking.length > 0 ? (
           <ol className="ranking-list">
             {scoredRanking.map(({ vendor, score }, index) => (
               <li key={vendor.id} className={index === 0 ? "ranking-list__winner" : ""}>
                 <span className="ranking-number">{String(index + 1).padStart(2, "0")}</span>
                 <VendorArt vendor={vendor} compact />
-                <span className="ranking-name">{vendor.name}<small>{vendor.eyebrow}</small></span>
+                <span className="ranking-name">{vendor.name}</span>
                 <b className="ranking-score">{score.toFixed(1)}</b>
               </li>
             ))}
           </ol>
-        ) : <div className="empty-result"><b>Nothing to rank yet.</b><span>Try again after you&apos;ve had a few meal exchanges.</span></div>}
+        ) : <div className="empty-result"><b>Nothing to rank yet.</b><span>Try again after you&apos;ve visited a few campus dining spots.</span></div>}
         {favoriteDish && topVendor && <div className="go-to"><span>My go-to</span><b>{favoriteDish}</b><small>at {topVendor.name}</small></div>}
         {untried.length > 0 && <p className="untried-note">Not ranked: {untried.map((id) => vendorById[id].name).join(", ")}</p>}
       </section>
@@ -536,7 +582,7 @@ export function RankingApp() {
       </div>}
 
       <section className="campus-section">
-        <div className="section-heading"><div><p className="eyebrow">The campus take</p><h2>Northwestern&apos;s ranking</h2></div>{leaderboard && <span>{leaderboard.mode === "demo" ? "Preview data" : `${leaderboard.completionCount.toLocaleString()} rankings`}</span>}</div>
+        <div className="section-heading"><h2>Northwestern&apos;s ranking</h2>{leaderboard?.mode === "live" && <span>{leaderboard.completionCount.toLocaleString()} rankings</span>}</div>
         {!leaderboard ? <div className="leaderboard-loading">Loading the campus ranking…</div> : (
           <ol className="leaderboard-list">
             {leaderboard.entries.map((entry, index) => {
@@ -546,10 +592,9 @@ export function RankingApp() {
             })}
           </ol>
         )}
-        <p className="campus-footnote">{leaderboard?.mode === "demo" ? "Connect Supabase to replace this preview with live campus results." : "Your ranking is counted automatically. Rank again anytime to update it."}</p>
+        {leaderboard?.mode === "live" && <p className="campus-footnote">Your ranking is counted automatically. Rank again anytime to update it.</p>}
       </section>
       <button className="button button--ghost" onClick={reset}>Rank again</button>
-      <footer>Made for Northwestern students <span>✦</span> No account required</footer>
     </main>
   );
 }

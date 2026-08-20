@@ -58,13 +58,15 @@ insert into public.schools (id, name) values ('northwestern', 'Northwestern Univ
 on conflict (id) do update set name = excluded.name;
 
 insert into public.vendors (id, school_id, name, menu_items) values
-  ('mod-pizza', 'northwestern', 'MOD Pizza', '["Create Your Own Pizza", "Mad Dog", "Tristan", "Caspian", "No Name Cake"]'),
-  ('buen-dia', 'northwestern', 'Buen Dia', '["Buen Dia Bowl", "Chicken Tacos", "Veggie Tacos", "Chips & Guac", "Horchata"]'),
-  ('wildcat-deli', 'northwestern', 'Wildcat Deli', '["Turkey Club", "Italian Sub", "Veggie Wrap", "Chicken Caesar Wrap", "Grilled Cheese"]'),
-  ('847-burger', 'northwestern', '847 Burger', '["847 Classic", "Double Burger", "Crispy Chicken Sandwich", "Veggie Burger", "Loaded Fries"]'),
-  ('shake-smart', 'northwestern', 'Shake Smart', '["The Classic", "PB Squared", "Acai Bowl", "Green Giant", "Overnight Oats"]'),
+  ('forno-pizza-co', 'northwestern', 'Forno Pizza Co.', '[]'),
+  ('buen-dia', 'northwestern', 'Buen Dia', '["Two chicken tacos with chips & salsa", "Two calabasitas tacos with chips & salsa", "Chicken quesadilla", "Cheese quesadilla"]'),
+  ('wildcat-deli', 'northwestern', 'Wildcat Deli', '["Build Your Own Sandwich"]'),
+  ('847-burger', 'northwestern', '847 Burger', '["Sheridan Road Burger", "Greenwood Street Garden Burger", "Central Street Chicken Sandwich"]'),
+  ('shake-smart', 'northwestern', 'Shake Smart', '["Regular-size shake", "Scooped bowl", "Blended bowl"]'),
   ('frans-cafe', 'northwestern', 'Fran''s Cafe', '["Chicken Tenders", "Quesadilla", "Mozzarella Sticks", "Mac & Cheese", "Fries"]'),
   ('lisas-cafe', 'northwestern', 'Lisa''s Cafe', '["Breakfast Sandwich", "Bagel & Cream Cheese", "Chicken Tenders", "Grilled Cheese", "Iced Coffee"]'),
   ('starbucks', 'northwestern', 'Starbucks', '["Caramel Macchiato", "Pink Drink", "Cold Brew", "Bacon Gouda Sandwich", "Cake Pop"]'),
-  ('tech-express', 'northwestern', 'Tech Express', '["Chicken Sandwich", "Caesar Salad", "Turkey Wrap", "Fruit Cup", "Iced Tea"]')
+  ('tech-express', 'northwestern', 'Tech Express', '[]'),
+  ('chicken-and-boba', 'northwestern', 'Chicken & Boba', '[]'),
+  ('lunas-pub-and-grill', 'northwestern', 'Luna''s Pub & Grill', '[]')
 on conflict (id) do update set name = excluded.name, menu_items = excluded.menu_items;

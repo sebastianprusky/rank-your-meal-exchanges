@@ -8,10 +8,12 @@ const requestTimes = new Map<string, number>();
 
 const demoScores: Record<string, number> = {
   "shake-smart": 8.6,
-  "mod-pizza": 8.2,
+  "forno-pizza-co": 8.2,
   "buen-dia": 7.8,
   "847-burger": 7.3,
+  "chicken-and-boba": 7.0,
   "frans-cafe": 6.8,
+  "lunas-pub-and-grill": 6.6,
   "wildcat-deli": 6.4,
   "starbucks": 5.9,
   "lisas-cafe": 5.5,
@@ -20,7 +22,7 @@ const demoScores: Record<string, number> = {
 
 const demoFavorites: Record<string, string> = {
   "shake-smart": "PB Squared",
-  "mod-pizza": "Create Your Own Pizza",
+  "forno-pizza-co": "Pepperoni pizza",
   "buen-dia": "Buen Dia Bowl",
   "847-burger": "847 Classic",
 };
@@ -118,6 +120,12 @@ function validRanking(value: unknown): value is RankingInput {
     && ranking.computedScore <= 10;
 }
 
+function cleanFavoriteDish(value: unknown) {
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[\u0000-\u001F\u007F]/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned && cleaned.length <= 80 ? cleaned : null;
+}
+
 export async function POST(request: Request) {
   if (!config()) return Response.json({ ok: true, mode: "demo" });
 
@@ -169,16 +177,17 @@ export async function POST(request: Request) {
     }
 
     const favorite = body.favoriteDish;
-    if (favorite?.vendorId && favorite.dishName) {
+    if (favorite?.vendorId && body.rankings.some((ranking) => (ranking as RankingInput).vendorId === favorite.vendorId)) {
       const vendor = vendors.find((candidate) => candidate.id === favorite.vendorId);
-      if (vendor?.menuItems.includes(favorite.dishName)) {
+      const dishName = cleanFavoriteDish(favorite.dishName);
+      if (vendor && dishName) {
         await supabaseFetch("session_favorite_dishes", {
           method: "POST",
           body: JSON.stringify({
             session_id: sessionId,
             school_id: schoolId,
             vendor_id: favorite.vendorId,
-            dish_name: favorite.dishName,
+            dish_name: dishName,
           }),
         });
       }

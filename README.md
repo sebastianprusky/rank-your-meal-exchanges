@@ -1,6 +1,6 @@
 # Rank Your Meal Exchanges
 
-A mobile-first, no-login Northwestern meal exchange ranking experience. Students make a fast first pass, resolve exact within-bucket order through head-to-head choices, optionally add their go-to order, and export a shareable image.
+A mobile-first, no-login Northwestern campus dining ranking experience. Students make a fast first pass, resolve exact within-bucket order through head-to-head choices, optionally add their go-to order, and export a shareable image.
 
 **Live site:** https://rank-your-meal-exchanges.vercel.app
 
@@ -24,4 +24,4 @@ The service-role key is only read inside Next.js route handlers and is never shi
 
 ## Deploy
 
-Deploy to Vercel and add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as production environment variables. Replace the placeholder menu items in both `lib/vendors.ts` and the seeded vendor records before launch.
+Deploy to Vercel and add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as production environment variables.

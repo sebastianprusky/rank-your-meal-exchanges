@@ -8,12 +8,12 @@ const display = Fraunces({ subsets: ["latin"], variable: "--font-display" });
 
 export const metadata: Metadata = {
   title: "Rank Your Meal Exchanges",
-  description: "Build your personal Northwestern meal exchange ranking in under two minutes.",
+  description: "Build your personal Northwestern campus dining ranking in under two minutes.",
   metadataBase: new URL(SITE_URL),
   alternates: { canonical: "/" },
   openGraph: {
     title: "Rank Your Meal Exchanges",
-    description: "What is Northwestern's best meal exchange? Make your ranking.",
+    description: "What is Northwestern's best campus dining spot? Make your ranking.",
     type: "website",
     url: "/",
   },

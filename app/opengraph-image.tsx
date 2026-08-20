@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Rank Your Meal Exchanges — Northwestern";
+export const alt = "Rank Northwestern Campus Dining";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -24,10 +24,10 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ marginTop: 52, display: "flex", flexDirection: "column", fontFamily: "Georgia, serif", fontSize: 88, fontWeight: 700, lineHeight: .94, letterSpacing: -4 }}>
           <span>Rank your</span>
-          <span style={{ color: "#4E2A84", fontStyle: "italic" }}>meal exchanges.</span>
+          <span style={{ color: "#4E2A84", fontStyle: "italic" }}>campus dining spots.</span>
         </div>
         <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", color: "#6D6571", fontSize: 24 }}>
-          <span>Nine spots. A few quick choices.</span>
+          <span>Eleven spots. A few quick choices.</span>
           <span style={{ padding: "14px 24px", color: "white", background: "#4E2A84", borderRadius: 999, fontWeight: 700 }}>Make your ranking →</span>
         </div>
       </div>

@@ -468,6 +468,7 @@ export function RankingApp() {
             ))}
           </div>
         </section>
+        <p className="project-disclaimer">Independent project inspired by Beli. Not affiliated with or endorsed by Beli or Northwestern University.</p>
       </main>
     );
   }

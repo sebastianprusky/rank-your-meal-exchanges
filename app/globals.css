@@ -47,6 +47,15 @@ button:focus-visible { outline: 3px solid #8d6fbd; outline-offset: 3px; }
 }
 
 .landing { display: flex; flex-direction: column; }
+.project-disclaimer {
+  width: min(720px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 18px 0 24px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
 .landing__hero {
   width: min(1180px, calc(100% - 40px));
   min-height: 680px;

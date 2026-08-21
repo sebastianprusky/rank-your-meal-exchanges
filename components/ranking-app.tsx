@@ -101,6 +101,8 @@ function VendorArt({ vendor, compact = false }: { vendor: Vendor; compact?: bool
         src={vendor.image}
         alt=""
         fill
+        loading="eager"
+        unoptimized
         sizes={compact ? "48px" : "(max-width: 760px) calc(100vw - 58px), 430px"}
       />
     </div>

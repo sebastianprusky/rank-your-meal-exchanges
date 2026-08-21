@@ -18,7 +18,7 @@ export const vendors: Vendor[] = [
     accent: "#D84531",
     accentSoft: "#F8C9B9",
     glyph: "◒",
-    image: "/vendors/forno-pizza-co.webp",
+    image: "/vendors/cards/forno-pizza-co.webp",
   },
   {
     id: "buen-dia",
@@ -27,7 +27,7 @@ export const vendors: Vendor[] = [
     accent: "#E58A19",
     accentSoft: "#F9DCA7",
     glyph: "✺",
-    image: "/vendors/buen-dia.webp",
+    image: "/vendors/cards/buen-dia.webp",
   },
   {
     id: "wildcat-deli",
@@ -36,7 +36,7 @@ export const vendors: Vendor[] = [
     accent: "#4E2A84",
     accentSoft: "#D8CAEE",
     glyph: "▤",
-    image: "/vendors/wildcat-deli.webp",
+    image: "/vendors/cards/wildcat-deli.webp",
   },
   {
     id: "847-burger",
@@ -45,7 +45,7 @@ export const vendors: Vendor[] = [
     accent: "#9C3827",
     accentSoft: "#EDC3B6",
     glyph: "≋",
-    image: "/vendors/847-burger.webp",
+    image: "/vendors/cards/847-burger.webp",
   },
   {
     id: "shake-smart",
@@ -54,7 +54,7 @@ export const vendors: Vendor[] = [
     accent: "#276E61",
     accentSoft: "#BCE0D5",
     glyph: "◗",
-    image: "/vendors/shake-smart.webp",
+    image: "/vendors/cards/shake-smart.webp",
   },
   {
     id: "frans-cafe",
@@ -63,7 +63,7 @@ export const vendors: Vendor[] = [
     accent: "#315B8A",
     accentSoft: "#C6D8EC",
     glyph: "✦",
-    image: "/vendors/frans-cafe.webp",
+    image: "/vendors/cards/frans-cafe.webp",
   },
   {
     id: "lisas-cafe",
@@ -72,7 +72,7 @@ export const vendors: Vendor[] = [
     accent: "#A15E79",
     accentSoft: "#EBCBD7",
     glyph: "☕",
-    image: "/vendors/lisas-cafe.webp",
+    image: "/vendors/cards/lisas-cafe.webp",
   },
   {
     id: "starbucks",
@@ -81,7 +81,7 @@ export const vendors: Vendor[] = [
     accent: "#15745A",
     accentSoft: "#B9DED3",
     glyph: "✳",
-    image: "/vendors/starbucks.webp",
+    image: "/vendors/cards/starbucks.webp",
   },
   {
     id: "tech-express",
@@ -90,7 +90,7 @@ export const vendors: Vendor[] = [
     accent: "#584176",
     accentSoft: "#D9CDE6",
     glyph: "↗",
-    image: "/vendors/tech-express.webp",
+    image: "/vendors/cards/tech-express.webp",
   },
   {
     id: "chicken-and-boba",
@@ -99,7 +99,7 @@ export const vendors: Vendor[] = [
     accent: "#B0445A",
     accentSoft: "#F0C9D2",
     glyph: "◉",
-    image: "/vendors/chicken-and-boba.webp",
+    image: "/vendors/cards/chicken-and-boba.webp",
   },
   {
     id: "lunas-pub-and-grill",
@@ -108,7 +108,7 @@ export const vendors: Vendor[] = [
     accent: "#7A4D2D",
     accentSoft: "#E5D0BC",
     glyph: "☾",
-    image: "/vendors/lunas-pub-and-grill.webp",
+    image: "/vendors/cards/lunas-pub-and-grill.webp",
   },
 ];
 

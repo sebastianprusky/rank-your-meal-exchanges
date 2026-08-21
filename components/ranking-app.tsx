@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { scoreBucket } from "@/lib/scoring";
 import { SITE_HOSTNAME, SITE_URL } from "@/lib/site";
@@ -95,9 +96,13 @@ function VendorArt({ vendor, compact = false }: { vendor: Vendor; compact?: bool
       style={{ "--vendor": vendor.accent, "--vendor-soft": vendor.accentSoft } as React.CSSProperties}
       aria-hidden="true"
     >
-      <span className="vendor-art__halo" />
-      <span className="vendor-art__glyph">{vendor.glyph}</span>
-      <span className="vendor-art__word">{vendor.shortName}</span>
+      <Image
+        className="vendor-art__image"
+        src={vendor.image}
+        alt=""
+        fill
+        sizes={compact ? "48px" : "(max-width: 760px) calc(100vw - 58px), 430px"}
+      />
     </div>
   );
 }
@@ -150,7 +155,6 @@ export function RankingApp() {
   const [phase, setPhase] = useState<Phase>("landing");
   const [bucketIndex, setBucketIndex] = useState(0);
   const [buckets, setBuckets] = useState<BucketMap>(emptyBuckets);
-  const [untried, setUntried] = useState<string[]>([]);
   const [sorted, setSorted] = useState<BucketMap>(emptyBuckets);
   const [machine, setMachine] = useState<SortMachine | null>(null);
   const [comparisons, setComparisons] = useState(0);
@@ -159,6 +163,7 @@ export function RankingApp() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const savedSignature = useRef<string | null>(null);
+  const shareCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const scoredRanking = useMemo(() => {
     return bucketOrder.flatMap((bucket) =>
@@ -176,7 +181,6 @@ export function RankingApp() {
     setPhase("landing");
     setBucketIndex(0);
     setBuckets(emptyBuckets());
-    setUntried([]);
     setSorted(emptyBuckets());
     setMachine(null);
     setComparisons(0);
@@ -213,9 +217,7 @@ export function RankingApp() {
     const vendor = vendors[bucketIndex];
     let nextBuckets = buckets;
 
-    if (choice === "untried") {
-      setUntried((current) => [...current, vendor.id]);
-    } else {
+    if (choice !== "untried") {
       nextBuckets = { ...buckets, [choice]: [...buckets[choice], vendor.id] };
       setBuckets(nextBuckets);
     }
@@ -235,7 +237,6 @@ export function RankingApp() {
       fine: current.fine.filter((id) => id !== previousVendor.id),
       disliked: current.disliked.filter((id) => id !== previousVendor.id),
     }));
-    setUntried((current) => current.filter((id) => id !== previousVendor.id));
     setBucketIndex((current) => current - 1);
   }
 
@@ -346,9 +347,7 @@ export function RankingApp() {
     }).then(() => void loadLeaderboard()).catch(() => void loadLeaderboard());
   }, [favoriteDish, loadLeaderboard, phase, scoredRanking, topVendor]);
 
-  async function createShareFile() {
-    await document.fonts.ready;
-    const canvas = document.createElement("canvas");
+  const drawShareCanvas = useCallback((canvas: HTMLCanvasElement) => {
     canvas.width = 1080;
     canvas.height = 1350;
     const context = canvas.getContext("2d");
@@ -405,6 +404,24 @@ export function RankingApp() {
     context.fillStyle = "#6D6571";
     context.font = "500 24px 'DM Sans', sans-serif";
     context.fillText(SITE_HOSTNAME, 82, 1315);
+  }, [favoriteDish, scoredRanking, topVendor]);
+
+  useEffect(() => {
+    if (phase !== "results" || scoredRanking.length === 0 || !shareCanvasRef.current) return;
+
+    let cancelled = false;
+    drawShareCanvas(shareCanvasRef.current);
+    void document.fonts.ready.then(() => {
+      if (!cancelled && shareCanvasRef.current) drawShareCanvas(shareCanvasRef.current);
+    });
+
+    return () => { cancelled = true; };
+  }, [drawShareCanvas, phase, scoredRanking.length]);
+
+  async function createShareFile() {
+    await document.fonts.ready;
+    const canvas = document.createElement("canvas");
+    drawShareCanvas(canvas);
 
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Could not create image")), "image/png"),
@@ -429,7 +446,7 @@ export function RankingApp() {
         setShareStatus("Image downloaded");
       }
     } catch (error) {
-      if ((error as Error).name !== "AbortError") setShareStatus("Could not share. Try downloading instead.");
+      if ((error as Error).name !== "AbortError") setShareStatus("Could not share the image.");
     }
   }
 
@@ -480,7 +497,7 @@ export function RankingApp() {
         <AppHeader step="Phase One: Your Preferences" />
         <div className="progress-row"><span>{bucketIndex + 1} of {vendors.length}</span><div className="progress-track"><i style={{ width: `${((bucketIndex + 1) / vendors.length) * 100}%` }} /></div></div>
         <section className="flow-content bucket-screen">
-          <div className="prompt-block"><h2>How do you feel about<br /><em>{vendor.name}?</em></h2></div>
+          <div className="prompt-block"><h2><span className="prompt-nowrap">How do you feel about</span><br /><em>{vendor.name}?</em></h2></div>
           <article className="focus-card">
             <VendorArt vendor={vendor} />
             <div className="focus-card__copy"><h3>{vendor.name}</h3></div>
@@ -557,43 +574,38 @@ export function RankingApp() {
   return (
     <main className="site-shell results-shell">
       <AppHeader step="Phase 4: Your results" />
-      <section className="results-intro"><h2>Your dining spots,<br /><em>ranked.</em></h2></section>
-      <section className="result-card" aria-label="Your ranked campus dining spots">
-        <div className="result-card__head"><span>My dining ranking</span><b>{scoredRanking.length}<small>/{vendors.length} tried</small></b></div>
-        {scoredRanking.length > 0 ? (
-          <ol className="ranking-list">
-            {scoredRanking.map(({ vendor, score }, index) => (
-              <li key={vendor.id} className={index === 0 ? "ranking-list__winner" : ""}>
-                <span className="ranking-number">{String(index + 1).padStart(2, "0")}</span>
-                <VendorArt vendor={vendor} compact />
-                <span className="ranking-name">{vendor.name}</span>
-                <b className="ranking-score">{score.toFixed(1)}</b>
-              </li>
-            ))}
-          </ol>
-        ) : <div className="empty-result"><b>Nothing to rank yet.</b><span>Try again after you&apos;ve visited a few campus dining spots.</span></div>}
-        {favoriteDish && topVendor && <div className="go-to"><span>My go-to</span><b>{favoriteDish}</b><small>at {topVendor.name}</small></div>}
-        {untried.length > 0 && <p className="untried-note">Not ranked: {untried.map((id) => vendorById[id].name).join(", ")}</p>}
-      </section>
+      <section className="results-intro"><h2>Your dining spots,<br /> <em>ranked.</em></h2></section>
+      <div className="results-layout">
+        <div className="personal-results">
+          {scoredRanking.length > 0 ? (
+            <section className="result-preview" aria-label="Your ranked campus dining spots">
+              <canvas ref={shareCanvasRef} width="1080" height="1350" />
+              <ol className="sr-only">
+                {scoredRanking.map(({ vendor, score }, index) => <li key={vendor.id}>{index + 1}. {vendor.name}, {score.toFixed(1)}</li>)}
+              </ol>
+            </section>
+          ) : <section className="result-card"><div className="empty-result"><b>Nothing to rank yet.</b><span>Try again after you&apos;ve visited a few campus dining spots.</span></div></section>}
 
-      {scoredRanking.length > 0 && <div className="share-actions">
-        <button className="button button--primary" onClick={shareResult}>Share result <span>↗</span></button>
-        <button className="button button--secondary" onClick={downloadResult}>Download image <span>↓</span></button>
-        {shareStatus && <p role="status">{shareStatus}</p>}
-      </div>}
+          {scoredRanking.length > 0 && <div className="share-actions">
+            <button className="button button--primary" onClick={shareResult}>Share result <span>↗</span></button>
+            <button className="button button--secondary" onClick={downloadResult}>Download image <span>↓</span></button>
+            {shareStatus && <p role="status">{shareStatus}</p>}
+          </div>}
+        </div>
 
-      <section className="campus-section">
-        <div className="section-heading"><h2>Northwestern&apos;s ranking</h2>{leaderboard?.mode === "live" && <span>{leaderboard.completionCount.toLocaleString()} rankings</span>}</div>
-        {!leaderboard ? <div className="leaderboard-loading">Loading the campus ranking…</div> : (
-          <ol className="leaderboard-list">
-            {leaderboard.entries.map((entry, index) => {
-              const vendor = vendorById[entry.vendorId];
-              if (!vendor) return null;
-              return <li key={entry.vendorId}><span className="leaderboard-rank">{index + 1}</span><VendorArt vendor={vendor} compact /><span><b>{vendor.name}</b><small>{entry.favoriteDish ? `Most picked: ${entry.favoriteDish}` : `${entry.ratingCount} ratings`}</small></span><strong>{entry.averageScore.toFixed(1)}</strong></li>;
-            })}
-          </ol>
-        )}
-      </section>
+        <section className="campus-section">
+          <div className="section-heading"><h2>Northwestern&apos;s ranking</h2>{leaderboard?.mode === "live" && <span>{leaderboard.completionCount.toLocaleString()} rankings</span>}</div>
+          {!leaderboard ? <div className="leaderboard-loading">Loading the campus ranking…</div> : (
+            <ol className="leaderboard-list">
+              {leaderboard.entries.map((entry, index) => {
+                const vendor = vendorById[entry.vendorId];
+                if (!vendor) return null;
+                return <li key={entry.vendorId}><span className="leaderboard-rank">{index + 1}</span><VendorArt vendor={vendor} compact /><span><b>{vendor.name}</b><small>{entry.favoriteDish ? `Most picked: ${entry.favoriteDish}` : `${entry.ratingCount} ratings`}</small></span><strong>{entry.averageScore.toFixed(1)}</strong></li>;
+              })}
+            </ol>
+          )}
+        </section>
+      </div>
       <button className="button button--ghost" onClick={reset}>Rank again</button>
     </main>
   );

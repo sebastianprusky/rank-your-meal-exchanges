@@ -136,6 +136,38 @@ function drawWrappedCanvasText(
   return Math.min(lines.length, 2);
 }
 
+async function loadCanvasImage(src: string) {
+  const image = new window.Image();
+  image.decoding = "async";
+  image.src = src;
+
+  if (!image.complete) {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error(`Could not load ${src}`));
+    });
+  }
+
+  if (!image.naturalWidth) throw new Error(`Could not load ${src}`);
+  return image;
+}
+
+function drawRoundedCanvasImage(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  size: number,
+  radius: number,
+) {
+  context.save();
+  context.beginPath();
+  context.roundRect(x, y, size, size, radius);
+  context.clip();
+  context.drawImage(image, x, y, size, size);
+  context.restore();
+}
+
 function AppHeader({ step }: { step: string }) {
   return (
     <header className="app-header">
@@ -349,7 +381,11 @@ export function RankingApp() {
     }).then(() => void loadLeaderboard()).catch(() => void loadLeaderboard());
   }, [favoriteDish, loadLeaderboard, phase, scoredRanking, topVendor]);
 
-  const drawShareCanvas = useCallback((canvas: HTMLCanvasElement) => {
+  const drawShareCanvas = useCallback(async (canvas: HTMLCanvasElement) => {
+    const vendorImages = new Map(await Promise.all(scoredRanking.map(async ({ vendor }) => (
+      [vendor.id, await loadCanvasImage(vendor.image)] as const
+    ))));
+
     canvas.width = 1080;
     canvas.height = 1350;
     const context = canvas.getContext("2d");
@@ -357,64 +393,75 @@ export function RankingApp() {
 
     context.fillStyle = "#F7F4EF";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#4E2A84";
-    context.fillRect(0, 0, 26, canvas.height);
-
     context.fillStyle = "#211B24";
-    context.font = "700 35px 'DM Sans', sans-serif";
-    context.fillText("NORTHWESTERN", 82, 95);
-    context.fillStyle = "#4E2A84";
-    context.font = "800 76px 'Fraunces', Georgia, serif";
-    context.fillText("My campus dining", 82, 184);
-    context.fillText("ranked", 82, 266);
+    context.font = "650 66px 'Fraunces', Georgia, serif";
+    context.fillText("My Northwestern dining ranked", 72, 128, 936);
 
     const compactRanking = scoredRanking.length > 9;
-    const rankingStart = compactRanking ? 315 : 335;
-    const rankingStep = compactRanking ? 70 : 86;
-    const rankingHeight = compactRanking ? 54 : 66;
+    const rankingStart = 178;
+    const rankingStep = compactRanking ? 78 : 88;
+    const rankingHeight = compactRanking ? 68 : 76;
     scoredRanking.forEach(({ vendor, score }, index) => {
       const y = rankingStart + index * rankingStep;
-      context.fillStyle = index === 0 ? "#4E2A84" : "#FFFFFF";
-      context.beginPath();
-      context.roundRect(72, y, 936, rankingHeight, 18);
-      context.fill();
 
-      context.fillStyle = index === 0 ? "#FFFFFF" : "#4E2A84";
-      context.font = `700 ${compactRanking ? 23 : 27}px 'DM Sans', sans-serif`;
-      context.fillText(String(index + 1).padStart(2, "0"), 98, y + (compactRanking ? 36 : 43));
-      context.fillStyle = index === 0 ? "#FFFFFF" : "#211B24";
-      context.font = `650 ${compactRanking ? 26 : 30}px 'DM Sans', sans-serif`;
-      context.fillText(vendor.name, 178, y + (compactRanking ? 36 : 43), 650);
-      context.textAlign = "right";
-      context.font = `700 ${compactRanking ? 23 : 27}px 'DM Sans', sans-serif`;
-      context.fillText(score.toFixed(1), 974, y + (compactRanking ? 36 : 43));
+      context.strokeStyle = "#DCD5CF";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(72, y + rankingHeight);
+      context.lineTo(1008, y + rankingHeight);
+      context.stroke();
+
+      context.fillStyle = "#4E2A84";
+      context.font = `650 ${compactRanking ? 27 : 30}px 'Fraunces', Georgia, serif`;
+      context.fillText(String(index + 1), 78, y + (compactRanking ? 45 : 50));
+
+      const imageSize = compactRanking ? 54 : 62;
+      const vendorImage = vendorImages.get(vendor.id);
+      if (vendorImage) drawRoundedCanvasImage(context, vendorImage, 130, y + 7, imageSize, 13);
+
+      context.fillStyle = "#211B24";
+      context.font = `650 ${compactRanking ? 27 : 30}px 'DM Sans', sans-serif`;
+      context.fillText(vendor.name, compactRanking ? 208 : 216, y + (compactRanking ? 45 : 50), 610);
+
+      const scoreX = 898;
+      const scoreY = y + (compactRanking ? 15 : 18);
+      const scoreWidth = 88;
+      const scoreHeight = compactRanking ? 38 : 42;
+      context.strokeStyle = "#4E2A84";
+      context.lineWidth = 2;
+      context.beginPath();
+      context.roundRect(scoreX, scoreY, scoreWidth, scoreHeight, scoreHeight / 2);
+      context.stroke();
+      context.fillStyle = "#4E2A84";
+      context.font = `700 ${compactRanking ? 22 : 24}px 'DM Sans', sans-serif`;
+      context.textAlign = "center";
+      context.fillText(score.toFixed(1), scoreX + scoreWidth / 2, scoreY + (compactRanking ? 27 : 29));
       context.textAlign = "left";
     });
 
     if (favoriteDish && topVendor) {
       context.fillStyle = "#4E2A84";
       context.font = "700 22px 'DM Sans', sans-serif";
-      context.fillText("MY FAVORITE", 82, 1148);
+      context.fillText("MY FAVORITE", 72, 1134);
       context.fillStyle = "#211B24";
       context.font = "650 30px 'DM Sans', sans-serif";
-      const favoriteLines = drawWrappedCanvasText(context, favoriteDish, 82, 1187, 916, 34);
+      const favoriteLines = drawWrappedCanvasText(context, favoriteDish, 72, 1173, 936, 34);
       context.fillStyle = "#6D6571";
       context.font = "500 21px 'DM Sans', sans-serif";
-      context.fillText(`at ${topVendor.name}`, 82, 1193 + favoriteLines * 34, 916);
+      context.fillText(`at ${topVendor.name}`, 72, 1179 + favoriteLines * 34, 936);
     }
 
     context.fillStyle = "#6D6571";
     context.font = "500 24px 'DM Sans', sans-serif";
-    context.fillText(SITE_HOSTNAME, 82, 1315);
+    context.fillText(SITE_HOSTNAME, 72, 1315);
   }, [favoriteDish, scoredRanking, topVendor]);
 
   useEffect(() => {
     if (phase !== "results" || scoredRanking.length === 0 || !shareCanvasRef.current) return;
 
     let cancelled = false;
-    drawShareCanvas(shareCanvasRef.current);
-    void document.fonts.ready.then(() => {
-      if (!cancelled && shareCanvasRef.current) drawShareCanvas(shareCanvasRef.current);
+    void document.fonts.ready.then(async () => {
+      if (!cancelled && shareCanvasRef.current) await drawShareCanvas(shareCanvasRef.current);
     });
 
     return () => { cancelled = true; };
@@ -423,7 +470,7 @@ export function RankingApp() {
   async function createShareFile() {
     await document.fonts.ready;
     const canvas = document.createElement("canvas");
-    drawShareCanvas(canvas);
+    await drawShareCanvas(canvas);
 
     const blob = await new Promise<Blob>((resolve, reject) =>
       canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Could not create image")), "image/png"),
@@ -596,13 +643,13 @@ export function RankingApp() {
         </div>
 
         <section className="campus-section">
-          <div className="section-heading"><h2>Northwestern&apos;s ranking</h2>{leaderboard?.mode === "live" && <span>{leaderboard.completionCount.toLocaleString()} rankings</span>}</div>
+          <div className="section-heading"><h2>Northwestern&apos;s ranking</h2></div>
           {!leaderboard ? <div className="leaderboard-loading">Loading the campus ranking…</div> : (
             <ol className="leaderboard-list">
               {leaderboard.entries.map((entry, index) => {
                 const vendor = vendorById[entry.vendorId];
                 if (!vendor) return null;
-                return <li key={entry.vendorId}><span className="leaderboard-rank">{index + 1}</span><VendorArt vendor={vendor} compact /><span><b>{vendor.name}</b><small>{entry.favoriteDish ? `Most picked: ${entry.favoriteDish}` : `${entry.ratingCount} ratings`}</small></span><strong>{entry.averageScore.toFixed(1)}</strong></li>;
+                return <li key={entry.vendorId}><span className="leaderboard-rank">{index + 1}</span><VendorArt vendor={vendor} compact /><span><b>{vendor.name}</b></span><strong>{entry.averageScore.toFixed(1)}</strong></li>;
               })}
             </ol>
           )}

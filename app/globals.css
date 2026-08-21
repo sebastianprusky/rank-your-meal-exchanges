@@ -184,7 +184,7 @@ h1 em, h2 em { color: var(--purple); font-weight: 650; }
 
 .results-shell { position: relative; height: 100dvh; padding-bottom: 14px; display: flex; flex-direction: column; }
 .results-shell .app-header { height: 44px; flex: 0 0 auto; }
-.results-intro { width: min(680px, calc(100% - 40px)); margin: 2px auto 14px; flex: 0 0 auto; text-align: center; }
+.results-intro { width: min(680px, calc(100% - 40px)); margin: 2px auto 32px; flex: 0 0 auto; text-align: center; }
 .results-intro h2 { font-size: clamp(40px, 4.6vw, 58px); }
 .results-intro br { display: none; }
 .results-intro > p:last-child { color: var(--muted); }
@@ -201,14 +201,12 @@ h1 em, h2 em { color: var(--purple); font-weight: 650; }
 .campus-section { width: 100%; min-width: 0; margin: 0; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
 .section-heading h2 { font-size: clamp(32px, 3.6vw, 44px); }
-.section-heading > span { padding: 8px 11px; color: var(--purple); background: var(--purple-light); border-radius: 999px; font-size: 11px; font-weight: 750; }
 .leaderboard-list { margin: 12px 0 0; padding: 0; display: grid; list-style: none; border-top: 1px solid var(--line); }
 .leaderboard-list li { min-height: 43px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
 .leaderboard-list .vendor-art--compact { width: 34px; min-width: 34px; height: 34px; min-height: 34px; border-radius: 10px; }
 .leaderboard-rank { width: 20px; color: var(--purple); font-family: var(--font-display), serif; font-size: 18px; }
 .leaderboard-list li > span:nth-of-type(2) { min-width: 0; flex: 1; }
 .leaderboard-list b { display: block; font-size: 13px; }
-.leaderboard-list small { display: block; overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .leaderboard-list strong { padding: 5px 8px; color: var(--purple); border: 1px solid var(--purple); border-radius: 999px; font-size: 12px; }
 .leaderboard-loading { margin-top: 28px; padding: 35px; color: var(--muted); background: rgba(255,255,255,.5); border-radius: 20px; text-align: center; }
 .results-shell > .button--ghost { position: absolute; top: 8px; left: max(20px, calc((100% - 1120px) / 2)); min-height: 38px; margin: 0; display: flex; }

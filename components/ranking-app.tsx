@@ -499,15 +499,6 @@ export function RankingApp() {
     }
   }
 
-  async function downloadResult() {
-    try {
-      downloadFile(await createShareFile());
-      setShareStatus("Image downloaded");
-    } catch {
-      setShareStatus("Could not create the image.");
-    }
-  }
-
   function downloadFile(file: File) {
     const url = URL.createObjectURL(file);
     const anchor = document.createElement("a");
@@ -635,15 +626,15 @@ export function RankingApp() {
             </section>
           ) : <section className="result-card"><div className="empty-result"><b>Nothing to rank yet.</b><span>Try again after you&apos;ve visited a few campus dining spots.</span></div></section>}
 
-          {scoredRanking.length > 0 && <div className="share-actions">
-            <button className="button button--primary" onClick={shareResult}>Share result <span>↗</span></button>
-            <button className="button button--secondary" onClick={downloadResult}>Download image <span>↓</span></button>
+          <div className={`share-actions${scoredRanking.length === 0 ? " share-actions--single" : ""}`}>
+            {scoredRanking.length > 0 && <button className="button button--primary" onClick={shareResult}>Share result <span>↗</span></button>}
+            <button className="button button--secondary" onClick={reset}>Rank again <span>↻</span></button>
             {shareStatus && <p role="status">{shareStatus}</p>}
-          </div>}
+          </div>
         </div>
 
         <section className="campus-section">
-          <div className="section-heading"><h2>Northwestern&apos;s ranking</h2></div>
+          <div className="section-heading"><h2>Northwestern&apos;s Leaderboard</h2></div>
           {!leaderboard ? <div className="leaderboard-loading">Loading the campus ranking…</div> : (
             <ol className="leaderboard-list">
               {leaderboard.entries.map((entry, index) => {
@@ -655,7 +646,6 @@ export function RankingApp() {
           )}
         </section>
       </div>
-      <button className="button button--ghost" onClick={reset}>Rank again</button>
     </main>
   );
 }
